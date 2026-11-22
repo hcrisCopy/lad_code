@@ -6,3 +6,4 @@ __pycache__/
 *.ckpt
 *.log
 .workbuddy/
+*研究方案*.md
