@@ -5,9 +5,8 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-from .common import DATA, read_json
+from .common import ROOTS, index_path, read_json
 from .extract import vocabulary
-from .index import ROOTS
 
 
 def main():
@@ -20,7 +19,7 @@ def main():
     if a.per_stratum < 1:
         p.error("--per-stratum must be positive")
     groups = defaultdict(list)
-    rows = read_json(DATA / "index" / f"{a.dataset}.json")
+    rows = read_json(index_path(a.dataset))
     if set(a.categories) - {r["category"] for r in rows}:
         p.error("Unknown category")
     for r in rows:

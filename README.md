@@ -2,29 +2,51 @@
 
 先测一个问题：暗光下认错一个零件时，保留第二种解释能少报多少正常品？产品真的缺件时，又会漏掉多少？运行目录统一为 `lad_code/`。首轮看 VID-AD 的 Fruits、Tools、Dishes，分别检查数量与类型、分格放置、左右顺序。
 
-## 环境和下载
+## 环境
 
 ```bash
 conda create -n lad python=3.11 -y
 conda activate lad
-pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu126
-pip install -r requirements.txt
-python -m lad.papers
-python -m lad.prepare repo vid weights
+python -m pip install torch==2.6.0+cu126 torchvision==0.21.0+cu126 --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cu126/ --extra-index-url https://pypi.tuna.tsinghua.edu.cn/simple
+python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-论文在 `../lad_research/papers/`，LogiCo 源码在 `../lad_research/repos/LogiCo/`，VID-AD 在 `../lad_data/VID-AD_dataset/`。权重需要 Meta 授权。按提示粘贴 ViT-L/16 和 dino.txt 两个原生 `.pth` 文件的完整下载地址，保存到 `../lad_data/weights/`。也可预设 `DINOV3_L_URL`、`DINOTXT_URL`。[Meta 权重申请](https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/) · [所需文件名](https://github.com/cnulab/LogiCo/blob/ac724ffb0c36392b443eecc41b58ba152b4298a0/ckpt/README.md)
+## 数据准备
 
-做 LOCO 时一并下载原图、作者分割图和 ViT-B/16。按提示粘贴 MVTec 完整数据包与 Meta ViT-B/16 的下载地址，或预设 `LOCO_URL`、`DINOV3_B_URL`。[MVTec 数据申请](https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad)
+下表路径均相对 `../lad_data/`。每个数据集的压缩包、解压文件和 `index.json` 放在同一个目录。
+
+| 获取内容 | 获取地址与操作 | 压缩包保存位置 | 解压位置 |
+|---|---|---|---|
+| VID-AD（首轮） | [作者 Google Drive](https://drive.google.com/file/d/1_UaWAuylvaErnvOq0uxq4gIg_NeSUNdz/view)，直接下载 | `VID-AD/VID-AD.zip` | `VID-AD/images/` |
+| MVTec LOCO AD | [MVTec 官网](https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad)，填写 **Download Dataset** 表单，下载完整包 | `MVTec-LOCO-AD/mvtec_loco_anomaly_detection.tar.xz` | `MVTec-LOCO-AD/mvtec_loco/` |
+| LOCO 分割图（仅 LogiCo 基线） | [作者 Google Drive](https://drive.google.com/file/d/1oUcC3O_2-T6TccEdCEC4VBk9mChIffAm/view)，直接下载 | `MVTec-LOCO-AD/mvtec_loco_segmentations.zip` | `MVTec-LOCO-AD/mvtec_loco_segmentations/` |
+
+在 `lad_code/` 下按需执行。已有压缩包会直接解压。图片和索引都已就位时，跳过对应的两步。
 
 ```bash
-python -m lad.prepare loco maps baseline-weight
-python -m lad.index --dataset loco
+# VID-AD
+python -m lad.prepare vid
 python -m lad.index --dataset vid
-python -m unittest discover -s tests -v
+
+# MVTec LOCO AD
+python -m lad.prepare loco
+python -m lad.index --dataset loco
 ```
 
-索引在 `../lad_data/index/`，校验完整目录、总图数和跨划分重复文件。只跑 VID 时执行最后两条即可。
+## 模型准备
+
+在 [Meta 官网](https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/) 申请 DINOv3，从邮件下载下列文件，原名保存到 `../lad_data/weights/`。无需申请 Hugging Face 权限。
+
+| 用途 | 文件 |
+|---|---|
+| 首轮 · 图像编码器 | `dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth` |
+| 首轮 · dino.txt | `dinov3_vitl16_dinotxt_vision_head_and_text_encoder-a442d8f5.pth` |
+| 仅 LogiCo 基线 | `dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth` |
+
+```bash
+python -m lad.prepare repo weights           # 获取 LogiCo 源码并校验首轮权重，缺权重时粘贴邮件链接
+python -m lad.prepare maps baseline-weight   # 仅 LogiCo 基线需要
+```
 
 ## LogiCo 作者基线
 
@@ -33,7 +55,7 @@ python -m unittest discover -s tests -v
 ```bash
 R=../lad_research/repos/LogiCo
 python -m lad.train_logico --category breakfast_box --epochs 200 --batch-size 14 --limit 0 --out ../lad_data/logico
-python "$R/evaluation.py" --dataset mvtec_loco --category breakfast_box --data_root ../lad_data --ckpt_root ../lad_data/weights --config_root "$R/configs" --save_dir ../lad_data/logico --batch_size 16 --ckpt_file_name LogiCo_epoch_200_ckpt.pkl
+python "$R/evaluation.py" --dataset mvtec_loco --category breakfast_box --data_root ../lad_data/MVTec-LOCO-AD --ckpt_root ../lad_data/weights --config_root "$R/configs" --save_dir ../lad_data/logico --batch_size 16 --ckpt_file_name LogiCo_epoch_200_ckpt.pkl
 ```
 
 ## 首轮实验
@@ -80,3 +102,5 @@ python -m lad.experiment --dataset vid --protocol cross --views clean --top-k 3 
 ```
 
 每个场景只用 Original 建库和定阈值。混合五条件与仅未见四条件分开写入 `pooled.csv`。方法定义、论文对照和继续条件见[阅读笔记](../lad_research/论文阅读与首轮实验.md)。
+
+下载论文到 `../lad_research/papers/` 用 `python -m lad.papers`。运行单元测试用 `python -m unittest discover -s tests -v`。

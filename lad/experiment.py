@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from .common import CACHE, DATA, RUNS, digest, file_hash, read_json, write_json
+from .common import CACHE, ROOTS, RUNS, digest, file_hash, index_path, read_json, write_json
 from .extract import VIEWS, cache_file, select_rows
-from .index import CONDITIONS, ROOTS
+from .index import CONDITIONS
 from .scoring import Components, compare_objects, normal_bank, scores
 from .report import report
 
@@ -61,7 +61,7 @@ def main():
     if not 0 < a.quantile < 1 or (a.protocol == "cross" and a.dataset != "vid"):
         parser.error("Invalid quantile or dataset/protocol combination")
     views = list(dict.fromkeys(["clean", *a.views]))
-    rows = select_rows(read_json(DATA / "index" / f"{a.dataset}.json"), a.categories, a.limit)
+    rows = select_rows(read_json(index_path(a.dataset)), a.categories, a.limit)
     annotations = {}
     if a.oracle:
         for line in a.oracle.read_text(encoding="utf-8-sig").splitlines():

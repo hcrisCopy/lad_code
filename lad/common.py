@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 DATA = Path("../lad_data")
+DATASETS = {"vid": DATA / "VID-AD", "loco": DATA / "MVTec-LOCO-AD"}
+ROOTS = {"vid": DATASETS["vid"] / "images", "loco": DATASETS["loco"] / "mvtec_loco"}
 REPO = Path("../lad_research/repos/LogiCo")
 WEIGHTS = DATA / "weights"
 RUNS = DATA / "runs"
@@ -11,6 +13,10 @@ CACHE = DATA / "candidates"
 REVISION = "ac724ffb0c36392b443eecc41b58ba152b4298a0"
 BACKBONE = "dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth"
 TEXT_HEAD = "dinov3_vitl16_dinotxt_vision_head_and_text_encoder-a442d8f5.pth"
+
+
+def index_path(dataset):
+    return DATASETS[dataset] / "index.json"
 
 
 def digest(value):

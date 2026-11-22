@@ -12,8 +12,8 @@ from easydict import EasyDict
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .common import DATA, REPO, WEIGHTS, digest, file_hash, read_json, write_json
-from .index import LOCO, ROOTS
+from .common import DATA, REPO, ROOTS, WEIGHTS, digest, file_hash, index_path, read_json, write_json
+from .index import LOCO
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
@@ -41,7 +41,7 @@ def main():
     vocab = yaml.safe_load((configs / "segmentations/mvtec_loco" / f"{a.category}.yaml").read_text())["prompts"]
     ckpt = WEIGHTS / upstream.get_dinov3_weight_name(cfg.encoder)
     transform, gt_transform = upstream.get_data_transforms(cfg.image_size)
-    rows = read_json(DATA / "index/loco.json")
+    rows = read_json(index_path("loco"))
     data = {}
     sources = {}
     for split in ("train", "validation"):

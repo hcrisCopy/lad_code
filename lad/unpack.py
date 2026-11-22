@@ -7,14 +7,14 @@ from pathlib import Path, PurePosixPath
 
 from tqdm import tqdm
 
-from .common import DATA
-from .index import LOCO, ROOTS, ASPECTS
+from .common import DATASETS, ROOTS
+from .index import LOCO, ASPECTS
 
 
 def unpack(kind, archive, clean):
     vid = kind == "vid"
     marker = "Fruits" if vid else "breakfast_box"
-    output = ROOTS["vid"] if vid else DATA / ("mvtec_loco" if kind == "loco" else "mvtec_loco_segmentations")
+    output = DATASETS["loco"] / "mvtec_loco_segmentations" if kind == "maps" else ROOTS[kind]
     categories = set(ASPECTS) if vid else set(LOCO)
     is_zip = zipfile.is_zipfile(archive)
     source = zipfile.ZipFile(archive) if is_zip else tarfile.open(archive, "r:*")

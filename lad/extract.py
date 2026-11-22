@@ -16,9 +16,8 @@ import yaml
 from PIL import Image, ImageEnhance, ImageFilter
 from tqdm import tqdm
 
-from .common import (BACKBONE, CACHE, DATA, REPO, REVISION, TEXT_HEAD, WEIGHTS,
-                     digest, file_hash, read_json, write_json)
-from .index import ROOTS
+from .common import (BACKBONE, CACHE, REPO, REVISION, ROOTS, TEXT_HEAD, WEIGHTS,
+                     digest, file_hash, index_path, read_json, write_json)
 
 # Object vocabulary only. No counts, positions or allowed configurations.
 VID_NAMES = {
@@ -124,7 +123,7 @@ def main():
         raise ValueError("Use a new --cache directory for a different frontend")
     write_json(config, signature)
     sig = digest(signature)
-    rows = select_rows(read_json(DATA / "index" / f"{a.dataset}.json"), a.categories, a.limit)
+    rows = select_rows(read_json(index_path(a.dataset)), a.categories, a.limit)
     jobs = [(r, v) for r in rows for v in dict.fromkeys(a.views)]
     device = torch.device("cuda", rank)
     logico.device = device

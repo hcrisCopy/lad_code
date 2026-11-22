@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from tqdm import tqdm
 
-from .common import DATA, file_hash, write_json, read_json
+from .common import ROOTS, file_hash, index_path, write_json, read_json
 
 LOCO = "breakfast_box juice_bottle pushpins screw_bag splicing_connectors".split()
 ASPECTS = {
@@ -17,7 +17,6 @@ ASPECTS = {
     "Dishes": ("Type", "Relation"), "Balls": ("Placement", "Relation"),
 }
 CONDITIONS = ["Original", "Cable_BG", "Mesh_BG", "Low-light_CD", "Blurry_CD"]
-ROOTS = {"loco": DATA / "mvtec_loco", "vid": DATA / "VID-AD_dataset"}
 
 
 def folders(dataset, category):
@@ -74,13 +73,14 @@ def main():
     p.add_argument("--clean", action="store_true")
     a = p.parse_args()
     rows = list(list_images(a.dataset))
-    expected = {"vid": 10395, "loco": 3644}[a.dataset]
+    # Count images in train, validation and test; exclude ground-truth masks.
+    expected = {"vid": 10395, "loco": 3651}[a.dataset]
     if len(rows) != expected:
         raise ValueError(f"Expected {expected} images, found {len(rows)}")
     groups = group_map(a.groups)
     if a.groups and set(groups) != {r["id"] for r in rows}:
         raise ValueError("Group CSV must cover each official image ID exactly once")
-    output = DATA / "index" / f"{a.dataset}.json"
+    output = index_path(a.dataset)
     partial = output.with_suffix(".progress.json")
     cache = {} if a.clean or not partial.exists() else read_json(partial)
     owners = defaultdict(set)

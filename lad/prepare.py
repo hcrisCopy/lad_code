@@ -8,11 +8,10 @@ from urllib.parse import urlsplit
 
 import gdown
 
-from .common import BACKBONE, TEXT_HEAD, WEIGHTS, DATA, REPO, REVISION, file_hash
+from .common import BACKBONE, TEXT_HEAD, WEIGHTS, DATASETS, REPO, REVISION, file_hash
 from .unpack import unpack
 
 BASE = "dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
-ARCHIVES = DATA / "downloads"
 DRIVE = {"vid": ("1_UaWAuylvaErnvOq0uxq4gIg_NeSUNdz", "VID-AD.zip"),
          "maps": ("1oUcC3O_2-T6TccEdCEC4VBk9mChIffAm", "mvtec_loco_segmentations.zip")}
 
@@ -52,8 +51,8 @@ def main():
                 raise ValueError(f"Expected LogiCo {REVISION} at {REPO}")
         elif name in DRIVE:
             file_id, filename = DRIVE[name]
-            ARCHIVES.mkdir(parents=True, exist_ok=True)
-            dest = ARCHIVES / filename
+            dest = DATASETS["vid" if name == "vid" else "loco"] / filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
             if not dest.is_file():
                 part = str(dest) + ".part"
                 if not gdown.download(id=file_id, output=part, resume=True):
@@ -61,7 +60,7 @@ def main():
                 Path(part).replace(dest)
             unpack(name, dest, clean=False)
         elif name == "loco":
-            dest = ARCHIVES / "mvtec_loco_anomaly_detection.tar.xz"
+            dest = DATASETS["loco"] / "mvtec_loco_anomaly_detection.tar.xz"
             download("LOCO_URL", dest)
             unpack(name, dest, clean=False)
         else:
